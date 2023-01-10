@@ -376,15 +376,17 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 
 int coursework1()
 {
+	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "MBa", "M Ba", "M Bb", "M Z"};
 	
-	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "MBa", "M Ba", "M Bb", "M Z" };
 	HEADER_C* data = GetStruct2(3, 33);
 
 	printf("======INITIAL DATA START======\n");
 	PrintDataStructure(data);
 	printf("======INITIAL DATA STOP=======\n");
 
-	for (int i = 0; i < 14; i++)
+	int len = sizeof(Cases) / sizeof(Cases[0]);
+	//for (int i = 0; i < 14; i++)
+	for (int i = 0; i < len; i++)
 	{
 		char* newChars = (char*)malloc(strlen(Cases[i]) * sizeof(char));
 		strcpy(newChars, Cases[i]);
@@ -395,7 +397,7 @@ int coursework1()
 	PrintDataStructure(data);
 	printf("======NEW DATA STOP=======\n");
 
-	for (int i = 0; i < 14; i++)
+	for (int i = 0; i < len; i++)
 	{
 		char* newChars = (char*)malloc(strlen(Cases[i]) * sizeof(char));
 		strcpy(newChars, Cases[i]);
@@ -407,9 +409,9 @@ int coursework1()
 	
 	return 0;
 }
-
+/*
 int main() {
 	coursework1();
 
 	return 0;
-}
+}*/

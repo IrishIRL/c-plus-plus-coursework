@@ -55,7 +55,7 @@ public:
     void getItem(DataStructure& right, char* s);
 
     // printing func
-    void printDataStructure(); 
+    void printDataStructure();
 
     ~DataStructure(); // 3
 };
@@ -63,31 +63,12 @@ public:
 // ITEMS HANDLER START //
 void ItemsHandler::printItem(ITEM3* item, size_t* currentNumber) {
     if (!item) { cout << "Nothing to print!" << endl; }
-    /*
-    if (currentNumber) {
-        cout << *currentNumber << ") " <<
-            item->pID << " " <<
-            item->Code << " " <<
-            item->Time.Hour << ":" <<
-            item->Time.Min << ":" <<
-            item->Time.Sec << endl;
-        (*currentNumber)++;
-    }
-
-    else {
-        cout << item->pID << " " <<
-            item->Code << " " <<
-            item->Time.Hour << ":" <<
-            item->Time.Min << ":" <<
-            item->Time.Sec << endl;
-    }
-    */
 
     if (currentNumber) {
         cout <<
-            "No." << setfill(' ') << setw(3) << *currentNumber << "|" <<
-            "ID:" << setfill(' ') << setw(20) << item->pID << "|" <<
-            "CODE:" << setfill(' ') << setw(11) << item->Code << "|" <<
+            "No." << setfill(' ') << setw(3) << *currentNumber << " | " <<
+            "ID:" << setfill(' ') << setw(20) << item->pID << " | " <<
+            "CODE:" << setfill(' ') << setw(11) << item->Code << " | " <<
             "TIME: " << setfill('0') << setw(2) << item->Time.Hour << ":" <<
             setw(2) << item->Time.Min << ":" <<
             setw(2) << item->Time.Sec << endl;
@@ -96,8 +77,8 @@ void ItemsHandler::printItem(ITEM3* item, size_t* currentNumber) {
 
     else {
         cout <<
-            "ID:" << setfill(' ') << setw(20) << item->pID << "|" <<
-            "CODE:" << setfill(' ') << setw(11) << item->Code << "|" <<
+            "ID:" << setfill(' ') << setw(20) << item->pID << " | " <<
+            "CODE:" << setfill(' ') << setw(11) << item->Code << " | " <<
             "TIME: " << setfill('0') << setw(2) << item->Time.Hour << ":" <<
             setw(2) << item->Time.Min << ":" <<
             setw(2) << item->Time.Sec << endl;
@@ -203,7 +184,8 @@ ITEM3* ItemsHandler::getItemFromList(ITEM3* list, char* itemID) {
 char* ItemsHandler::serializeItem(ITEM3* item, size_t* size) {
     int n = strlen(item->pID) + 1;
     char* serialItem, * r;
-    *size = n + sizeof(ITEM2) + 3 * sizeof(int) + sizeof(unsigned long int) - sizeof(ITEM2*) - sizeof(TIME*) - sizeof(char*);
+    //*size = n + sizeof(ITEM2) + 3 * sizeof(int) + sizeof(unsigned long int) - sizeof(ITEM2*) - sizeof(TIME*) - sizeof(char*);
+    *size = n + sizeof(ITEM3) + 3 * sizeof(int) + sizeof(unsigned long int) - sizeof(ITEM3*) - sizeof(TIME) - sizeof(char*);
     serialItem = (char*)malloc(*size);
     memcpy(r = serialItem, &n, sizeof(int));
     memcpy(r += sizeof(int), item->pID, n);
@@ -234,12 +216,12 @@ bool ItemsHandler::areSame(ITEM3* list1, ITEM3* list2) {
 
 // HELPER FUNCTIONS START //
 
-int endline(int caseno) {
-    cout << endl << "=-------------------------------------------------------------=" << endl << endl;
-    if (caseno != 0) {
-        std:cout << "TEST CASE " << caseno << endl << endl;
+int endline(int caseNo) {
+    cout << endl << "=-------------------------------------------------------------------=" << endl << endl;
+    if (caseNo != 0) {
+    std:cout << "TEST CASE " << caseNo << endl << endl;
     }
-    return (caseno + 1);
+    return (caseNo + 1);
 }
 
 // Task 12
@@ -302,18 +284,19 @@ std::vector <ITEM3> DataStructure::getAllItems() {
 void DataStructure::insertItem(char* pNewItemID)
 {
     if (pNewItemID && isInStructure(pNewItemID)) {
-        throw 1; // Already exists exception
+        throw exception("Item already exists");
+        // throw 1; // Already exists exception
     }
 
     if (pNewItemID == 0 || ItemsHandler::validateIDFormat(pNewItemID)) {
-        ITEM3* newItem = (ITEM3*)GetItem(10, ((char*)pNewItemID));
+        ITEM3* newItem = (ITEM3*)GetItem(3, ((char*)pNewItemID));
         newItem->pNext = (ITEM3*)this->Start->ppItems[0];
         this->Start->ppItems[0] = newItem;
         this->size++;
     }
-
     else {
-        throw 2; // Format error
+        throw exception("Format Error (Invalid ID Format or Nullptr)");
+        // throw 2; // Format error
     }
 }
 
@@ -346,17 +329,17 @@ bool DataStructure::isInStructure(char* itemID) {
             }
         }
     }
-   return false;
+    return false;
 }
 
 void DataStructure::removeItem(char* itemID) {
     if (itemID == nullptr || !ItemsHandler::validateIDFormat(itemID)) {
-        throw exception ("Format Error"); // Format error
-        //throw 2;
+        throw exception("Format Error (Invalid ID Format or Nullptr)");
+        //throw 2; // Format error
     }
     else if (!isInStructure(itemID)) {
-        throw exception ("No such thing in structure"); // No such thing in structure
-        //throw 1;
+        throw exception("No such item in the structure");
+        //throw 1; // No such item in structure
     }
     else {
         HEADER_C* cache = this->Start;
@@ -402,7 +385,7 @@ DataStructure::DataStructure(char* pFilename)
         int n = fread(pData, 1, lSize, pFile);
         fclose(pFile);
     }
-    else { cout << "file error" << endl; return; }
+    else { cout << "file error" << endl; throw exception("File Error"); } //return; }
 
     DataStructure* newDataStruct = new DataStructure(GetStruct2(3, 1), (size_t)1);
     ITEM3 itemToBeRemoved = newDataStruct->getAllItems()[0];
@@ -443,7 +426,7 @@ DataStructure::DataStructure(char* pFilename)
 };
 
 // Task 3
-DataStructure::~DataStructure() { 
+DataStructure::~DataStructure() {
     if (!this->Start) { return; }
     for (; this->Start; this->Start = this->Start->pNext) {
         for (int counter = 0; counter < 26; counter++) {
@@ -464,15 +447,15 @@ size_t DataStructure::getItemsNumber() { return this->size; }
 
 // Task 6
 ITEM3* DataStructure::getItem(char* itemID) {
-    
+
     HEADER_C* cache = this->Start;
 
     if (itemID == nullptr || !ItemsHandler::validateIDFormat(itemID)) {
-        throw exception("Format error");
+        throw exception("Format Error (Invalid ID Format or Nullptr)");
         //throw 2; // Format error
     }
     else if (!isInStructure(itemID)) {
-        throw exception("No such thing in structure");
+        throw exception("No such item in the structure");
         //throw 1; // No such thing in structure 
     }
 
@@ -543,7 +526,7 @@ int DataStructure::operator==(DataStructure& other) {
 // Task 11
 void DataStructure::write(char* filename) {
     FILE* pFile = fopen(filename, "wb");
-    if (!pFile) { cout << "File not opened" << endl; return; }
+    if (!pFile) { cout << "File not opened" << endl; throw exception("File Error"); } // return; }
 
     std::vector <ITEM3> itemsToBeWritten = this->getAllItems();
     char* totalNum = (char*)malloc(sizeof(int));
@@ -559,11 +542,134 @@ void DataStructure::write(char* filename) {
     fclose(pFile);
 }
 
+
+void coursework1() {
+    // TEST CASES START //
+    cout << "=--------------------------- COURSEWORK 1 --------------------------=" << endl;
+
+    int testcase = 1;
+    testcase = endline(testcase);
+
+    // TEST CASE 1 START //
+    // Sets the number of items to 30 and prints the data structure.
+
+    DataStructure* structure = new DataStructure(GetStruct2(3, 30), 30);
+    structure->printDataStructure();
+
+    // TEST CASE 1 STOP //
+
+    testcase = endline(testcase);
+
+    // TEST CASE 2 START //
+    // One after another inserts new items with identifiers: Z A, Z Z, Z K, A Z, A A, A K, G Z, G A, G K, M A, M Ba, M Bb, M Z.
+    char insert[][13] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "M Ba", "M Bb", "M Z" };
+
+    int len = sizeof(insert) / sizeof(insert[0]); // detect the length of insert array
+
+    for (int i = 0; i < len; i++) {
+        try {
+            structure->insertItem(insert[i]);
+        }
+        catch (const exception& msg) {
+            cerr << msg.what() << endl;
+        }
+    } // Append to structure from dict
+
+    // Check that the new size is eq to 43
+    if (structure->getItemsNumber() == 43) {
+        cout << "Done" << endl;
+    }
+    else {
+        cout << "The size of structure is not eq to 43. Please verify." << endl;
+    }
+    // PS. To insert an item from the given item list, use structure->insertItem();
+    // TEST CASE 2 STOP //
+
+    testcase = endline(testcase);
+
+    // TEST CASE 3 START //
+    // Trys to insert items with identifier M Ba (already exists) and Mba(illegal format) and prints the error messages.
+    try {
+        structure->insertItem((char*)"M Ba");
+    }
+    catch (const exception& msg) {
+        cerr << msg.what() << endl;
+    }// Rised exception; id already in dict
+
+    try {
+        structure->insertItem((char*)"Mba");
+    }
+    catch (const exception& msg) {
+        cerr << msg.what() << endl;
+    } // Rised exception; error formatting
+
+    // TEST CASE 3 STOP //
+
+    testcase = endline(testcase);
+
+    // TEST CASE 4 START //
+    // Prints the new data structure of 43 items.
+
+    structure->printDataStructure(); // New data structure print
+
+    // TEST CASE 4 STOP //
+
+    testcase = endline(testcase);
+
+    // TEST CASE 5 START //
+    // One after another removes the items that were just inserted.
+
+    for (int i = 0; i < len; i++) {
+        try {
+            structure->removeItem(insert[i]);
+        }
+        catch (const exception& msg) {
+            cerr << msg.what() << endl;
+        }
+    } // remoiving items, we previously added
+
+    // TEST CASE 5 STOP //
+
+    testcase = endline(testcase);
+
+    // TEST CASE 6 START //
+    // Trys to remove items with identifier M Ba and Mba and prints the error messages.
+    try {
+        structure->removeItem((char*)"M Ba");
+    }
+    catch (const exception& msg) {
+        cerr << msg.what() << endl;
+    }
+
+    try {
+        structure->removeItem((char*)"Mba");
+    }
+    catch (const exception& msg) {
+        cerr << msg.what() << endl;
+    }
+
+    // TEST CASE 6 STOP //
+
+    testcase = endline(testcase);
+
+    // TEST CASE 7 START //
+    // Prints the data structure.
+
+    structure->printDataStructure();
+
+    // TEST CASE 7 STOP //
+
+    testcase = endline(0);
+
+    // just in case
+    structure->~DataStructure();
+}
+
 int coursework2()
 {
     // TEST CASES START //
-    cout << "=------------------------ COURSEWORK 2 -----------------------=" << endl;
-    
+    cout << "=--------------------------- COURSEWORK 2 --------------------------=" << endl;
+
     int testcase = 1;
     //DataStructure* structure = new DataStructure(GetStruct2(3, 10), 10);
 
@@ -593,7 +699,7 @@ int coursework2()
     if (noOfElements == structure->getItemsNumber()) {
         cout << "Done" << endl;
     }
-    
+
     // TEST CASE 2 STOP //
 
     testcase = endline(testcase);
@@ -620,14 +726,14 @@ int coursework2()
     // Retrieves item with ID Light Cyan.
 
     structure->getItem(*structure, (char*)"Light Cyan");
-    
+
     // TEST CASE 5 STOP //
 
     testcase = endline(testcase);
-    
+
     // TEST CASE 6 START //
     // Tries to retrieve non-existing element X X.
-    
+
     structure->getItem(*structure, (char*)"X X");
 
     // TEST CASE 6 STOP //
@@ -641,7 +747,7 @@ int coursework2()
     DataStructure anotherStructure;
     anotherStructure = *structure;
     anotherStructure.printDataStructure();
- 
+
     // TEST CASE 7 STOP //
 
     testcase = endline(testcase);
@@ -664,13 +770,13 @@ int coursework2()
 
     switch (*structure == anotherStructure) {
     case(false):
-    cout << ("Structures are not identical") << endl;
+        cout << ("Structures are not identical") << endl;
         break;
     case(true):
-    cout << ("Structures are identical") << endl;
+        cout << ("Structures are identical") << endl;
         break;
     default:
-    cout << ("Structures are not identical") << endl;
+        cout << ("Structures are not identical") << endl;
         break;
     }
     // TEST CASE 9 STOP //
@@ -681,7 +787,9 @@ int coursework2()
     // Writes the initial structure (now 7 items) into a data file.
 
     structure->printDataStructure();
-    structure->write((char*)"C:\\Users\\Mark\\Desktop\\Coursework2\\Coursework1\\dataset.dat");
+    // The folder should be created.
+    // File could be created or will be rewritten otherwise.
+    structure->write((char*)"C:\\CPP-Coursework\\dataset.dat");
 
     // TEST CASE 10 STOP //
 
@@ -690,8 +798,8 @@ int coursework2()
     // TEST CASE 11 START //
     // Creates a new structure from this data file and compares it with initial stucture.
 
-    DataStructure* fromFile = new DataStructure((char*)"C:\\Users\\Mark\\Desktop\\Coursework2\\Coursework1\\dataset.dat");
-        
+    DataStructure* fromFile = new DataStructure((char*)"C:\\CPP-Coursework\\dataset.dat");
+
     switch (*structure == *fromFile) {
     case(false):
         cout << ("Structures are not identical") << endl;
@@ -722,35 +830,36 @@ int coursework2()
 
     endline(0);
 
+    // DESTRUCTOR CHECK
     // cout << "destructor check" << endl << endl;
-    structure->~DataStructure();
-    anotherStructure.~DataStructure();
-    fromFile->~DataStructure();
+    //structure->~DataStructure();
+    //anotherStructure.~DataStructure();
+    //fromFile->~DataStructure();
 
     // VERIFY THAT STRUCTURES ARE DESTROYED
     //structure->printDataStructure();
     //anotherStructure.printDataStructure();
     //fromFile->printDataStructure();
-    
-    // JUST SOME OTHER TEST
-    /*
-    cout << (*structure == anotherStructure) << endl;
-    structure->insertItem((char*)"Game Over");
-    structure->insertItem((char*)"Does It");
-    cout << (*structure == anotherStructure) << endl;
 
-    anotherStructure.insertItem((char*)"Does It");
-    anotherStructure.insertItem((char*)"Game Over");
+    // TRYING TO COMPARE TWO STRUCTURES WITH SIMILAR ITEMS
+    // (ORDER MATTERS)
+    //cout << (*structure == anotherStructure) << endl;
+    //structure->insertItem((char*)"Game Over");
+    //structure->insertItem((char*)"Does It");
+    //cout << (*structure == anotherStructure) << endl;
+    // 
+    //anotherStructure.insertItem((char*)"Does It");
+    //anotherStructure.insertItem((char*)"Game Over");
+    // 
+    //cout << (*structure == anotherStructure) << endl;
 
-    cout << (*structure == anotherStructure) << endl; // Order matters!
-    */
-    
     return 0;
 }
 
 
 int main() {
+    coursework1();
     coursework2();
-    
+
     return 0;
 }
