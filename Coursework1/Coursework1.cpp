@@ -1,11 +1,14 @@
 #pragma warning(disable : 4996)
-#include <iostream>
+//#include <iostream>
+#include <stdio.h> // for printf
+#include <stdlib.h> // for malloc
+#include <string.h> // for strcopy, strchr, strlen
 #include "DateTime.h"
 #include "Items.h"
 #include "Headers.h"
 #include "ICS0017DataSource.h"
 
-using namespace std;
+//using namespace std;
 
 void PrintDataStructure(HEADER_C* pList)
 {
@@ -18,7 +21,8 @@ void PrintDataStructure(HEADER_C* pList)
 		return;
 	}
 
-	while (pC != nullptr)
+//	while (pC != nullptr)
+	while (pC != NULL)
 	{
 		ITEM3* pCitem = NULL;
 		void** pCitemArr = pC->ppItems;
@@ -47,7 +51,8 @@ void PrintDataStructure(HEADER_C* pList)
 
 char* GetWordOne(char* pNewItemID)
 {
-	if (pNewItemID == nullptr) {
+	//if (pNewItemID == nullptr) {
+	if (pNewItemID == NULL) {
 		return NULL;
 	}
 	char* pWordOne = (char*)malloc(1 * sizeof(char));
@@ -80,7 +85,8 @@ char* GetWordOne(char* pNewItemID)
 HEADER_C* GetHeaderPos(HEADER_C* pList, char* pChar)
 {
 	HEADER_C* pC = pList;
-	while (pC != nullptr)
+	//while (pC != nullptr)
+	while (pC != NULL)
 	{
 		if (pC->cBegin == *pChar)
 		{
@@ -94,8 +100,8 @@ HEADER_C* GetHeaderPos(HEADER_C* pList, char* pChar)
 ITEM3* GetItemLastPos(ITEM3* pItem)
 {
 	ITEM3* pI = pItem;
-	while (pI != nullptr)
-	{
+	//while (pI != nullptr)
+	while (pI != NULL) {
 		if (pI->pNext == NULL)
 		{
 			return pI;
@@ -182,7 +188,8 @@ HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 	{
 		if (CheckForValidity(pNewItemID) == false)
 		{
-			cout << "ERROR! Given index is wrong" << endl;
+			//cout << "ERROR! Given index is wrong" << endl;
+			printf("ERROR! Given index is wrong\n");
 
 			return pList;
 		}
@@ -199,13 +206,15 @@ HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 		void** ppItems = pC->ppItems; //Dummy
 		int i = (int)*pWordTwo - 'A';
 
-		if (*(ppItems + i) != nullptr && *pWordTwo == abc[i])
+		//if (*(ppItems + i) != nullptr && *pWordTwo == abc[i])
+		if (*(ppItems + i) != NULL && *pWordTwo == abc[i])
 		{
 			ITEM3* pItems = (ITEM3*)*(ppItems + i); //Dummy
 			char* pItemWordOne = GetWordOne(pItems->pID);
 
 			char* pItemWordTwo = (strchr(pItems->pID, ' ') + 1);
-			if (pItemWordOne != nullptr)
+			//if (pItemWordOne != nullptr)
+			if (pItemWordOne != NULL)
 			{
 				//Iterate through Items
 				for (int j = 0; pItems; pItems = pItems->pNext, j++) //Compare input strings with item strings. Check for duplicate
@@ -213,7 +222,8 @@ HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 					pItemWordTwo = (strchr(pItems->pID, ' ') + 1);
 					if (StringCompare(pWordOne, pItemWordOne) && StringCompare(pWordTwo, pItemWordTwo))
 					{
-						cout << "ERROR! This ID already exists";
+						//cout << "ERROR! This ID already exists";
+						printf("ERROR! This ID already exists\n");
 						return pList;
 					}
 				}
@@ -293,7 +303,8 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 {
 	if (CheckForValidity(pItemID) == false)
 	{
-		cout << "ERROR! Given index is wrong" << endl;
+		//cout << "ERROR! Given index is wrong" << endl;
+		printf("ERROR! Given index is wrong\n");
 		return pList;
 	}
 	char* pWordOne = GetWordOne(pItemID);
@@ -358,8 +369,8 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 		}
 		pC = pC->pNext;
 	}
-	cout << "ERROR! No index matches with give input";
-
+	//cout << "ERROR! No index matches with give input";
+	printf("ERROR! No index matches with give input\n");
 	return pList;
 }
 
@@ -397,10 +408,8 @@ int coursework1()
 	return 0;
 }
 
-/*
 int main() {
 	coursework1();
 
 	return 0;
 }
-*/
