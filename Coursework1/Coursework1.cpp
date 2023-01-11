@@ -21,7 +21,7 @@ void PrintDataStructure(HEADER_C* pList)
 		return;
 	}
 
-//	while (pC != nullptr)
+	//while (pC != nullptr)
 	while (pC != NULL)
 	{
 		ITEM3* pCitem = NULL;
@@ -376,8 +376,8 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 
 int coursework1()
 {
-	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "MBa", "M Ba", "M Bb", "M Z"};
-	
+	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "MBa", "M Ba", "M Bb", "M Z" };
+
 	HEADER_C* data = GetStruct2(3, 33);
 
 	printf("======INITIAL DATA START======\n");
@@ -406,12 +406,14 @@ int coursework1()
 	printf("======REM DATA START======\n");
 	PrintDataStructure(data);
 	printf("======REM DATA STOP=======\n");
-	
+
 	return 0;
 }
+
 /*
 int main() {
 	coursework1();
 
 	return 0;
-}*/
+}
+*/

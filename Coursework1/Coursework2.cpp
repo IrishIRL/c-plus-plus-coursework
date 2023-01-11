@@ -219,7 +219,7 @@ bool ItemsHandler::areSame(ITEM3* list1, ITEM3* list2) {
 int endline(int caseNo) {
     cout << endl << "=-------------------------------------------------------------------=" << endl << endl;
     if (caseNo != 0) {
-    std:cout << "TEST CASE " << caseNo << endl << endl;
+        cout << "TEST CASE " << caseNo << endl << endl;
     }
     return (caseNo + 1);
 }
@@ -427,12 +427,13 @@ DataStructure::DataStructure(char* pFilename)
 
 // Task 3
 DataStructure::~DataStructure() {
-    if (!this->Start) { return; }
+    if (!this->Start) { delete this->Start; return; }
     for (; this->Start; this->Start = this->Start->pNext) {
         for (int counter = 0; counter < 26; counter++) {
             ItemsHandler::freeList(&(((ITEM3**)this->Start->ppItems)[counter]));
         }
     }
+    delete[] this->Start;
 }
 
 // Task 4
@@ -832,9 +833,9 @@ int coursework2()
 
     // DESTRUCTOR CHECK
     // cout << "destructor check" << endl << endl;
-    //structure->~DataStructure();
-    //anotherStructure.~DataStructure();
-    //fromFile->~DataStructure();
+    structure->~DataStructure();
+    anotherStructure.~DataStructure();
+    fromFile->~DataStructure();
 
     // VERIFY THAT STRUCTURES ARE DESTROYED
     //structure->printDataStructure();
@@ -856,10 +857,9 @@ int coursework2()
     return 0;
 }
 
-
 int main() {
-    coursework1();
-    coursework2();
+    //coursework1();
+    //coursework2();
 
     return 0;
 }
