@@ -692,8 +692,6 @@ void coursework1() {
     // One after another inserts new items with identifiers: Z A, Z Z, Z K, A Z, A A, A K, G Z, G A, G K, M A, M Ba, M Bb, M Z.
     char insert[][13] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "M Ba", "M Bb", "M Z" };
 
-    //char insert[][4] = { "Z A" };
-
     int len = sizeof(insert) / sizeof(insert[0]); // detect the length of insert array
 
     for (int i = 0; i < len; i++) {
@@ -824,7 +822,7 @@ int coursework2()
     int noOfElements = 10;
     for (int i = 0; i < noOfElements; i++) {
         ITEM3* toBeAdded = (ITEM3*)GetItem(3);
-        ItemsHandler::printItem(toBeAdded);
+        //ItemsHandler::printItem(toBeAdded);
         *structure += toBeAdded;
     }
     if (noOfElements == structure->getItemsNumber()) {
