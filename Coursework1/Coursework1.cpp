@@ -7,6 +7,7 @@
 #include "Items.h"
 #include "Headers.h"
 #include "ICS0017DataSource.h"
+#include <string>
 
 //using namespace std;
 
@@ -31,18 +32,21 @@ void PrintDataStructure(HEADER_C* pList)
 			if (*(pCitemArr + letter))
 			{
 				ITEM3* pCitem = (ITEM3*)(*(pCitemArr + letter));
-				//if (pCitem != nullptr) { // not needed?
-				printf("%c%c | NO.%3d | ID: %32s | CODE: %u | TIME: %02d:%02d:%02d \n",
-					pC->cBegin,
-					char('A' + letter),
-					counter + 1,
-					pCitem->pID,
-					pCitem->Code,
-					pCitem->Time.Hour,
-					pCitem->Time.Min,
-					pCitem->Time.Sec);
-
-				counter++;
+				while(pCitem) {
+					//if (pCitem != nullptr) { // not needed?
+					printf("%c%c | NO.%3d | ID: %32s | CODE: %u | TIME: %02d:%02d:%02d \n",
+						pC->cBegin,
+						char('A' + letter),
+						counter + 1,
+						pCitem->pID,
+						pCitem->Code,
+						pCitem->Time.Hour,
+						pCitem->Time.Min,
+						pCitem->Time.Sec);
+					pCitem = pCitem->pNext;
+					counter++;
+				}
+				
 			}
 		}
 		pC = pC->pNext;
@@ -181,12 +185,64 @@ bool CheckForValidity(char* pChar)
 	return true;
 }
 
+bool checkWord(char* word, int len) {
+	for (int i = 0; i < len; i++) {
+		int ascii = (int)*(word + i);
+		if (!((ascii >= 65 || ascii <= 90) || (ascii >= 97 || ascii <= 122) || ascii == 45)) { return true; }
+	}
+	return false;
+}
+
+bool validateIDFormat(char* pNewItemID) {
+	if (strlen(pNewItemID) < 3) { return false; }
+
+	char* spacePos = strchr(pNewItemID, ' ');
+
+	if (spacePos == 0 || strchr(spacePos + 1, ' ') != 0) { return false; }
+
+	char first = *pNewItemID,
+		second = *(spacePos + 1);
+
+	if ((int)first < 65 || (int)first > 90 || (int)second < 65 || (int)second > 90) { return false; }
+
+	int lenFirst = spacePos - pNewItemID,
+		lenSecond = strlen(pNewItemID) - lenFirst - 1;
+
+	if (checkWord(pNewItemID, lenFirst) || checkWord(spacePos + 1, lenSecond)) { return false; }
+	return true;
+}
+
+bool isInList(ITEM3* head, char* itemID) {
+	for (; head; head = head->pNext) {
+		if ((std::string)head->pID == (std::string)itemID) { return true; }
+	}
+	return false;
+}
+
+bool isInStructure(char* itemID, HEADER_C* pC) {
+	HEADER_C* cache = pC;
+
+	for (; cache; cache = cache->pNext) {
+		if (cache == nullptr) { continue; } // if there are null pointers in double linked list at first layer
+		else {
+			ITEM3** secondLayer = (ITEM3**)cache->ppItems;
+			for (int counter = 0; counter < 26; counter++) {
+				if (secondLayer[counter]) {
+					if (isInList(secondLayer[counter], itemID)) { return true; }
+				}
+			}
+		}
+	}
+	return false;
+}
+
 HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 {
 	ITEM3* pNewItem = (ITEM3*)malloc(sizeof(ITEM3));
 	if (pNewItemID != 0)
 	{
-		if (CheckForValidity(pNewItemID) == false)
+		//if (CheckForValidity(pNewItemID) == false)
+		if (validateIDFormat(pNewItemID) == false)
 		{
 			//cout << "ERROR! Given index is wrong" << endl;
 			printf("ERROR! Given index is wrong\n");
@@ -194,119 +250,174 @@ HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 			return pList;
 		}
 	}
+	if (pNewItemID && isInStructure(pNewItemID, pList)) {
+		printf("Already exists in structure.");
+		throw 1;
+		// throw 1; // Already exists exception
+	}
 
 	char abc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	char* pWordOne = GetWordOne(pNewItemID);
 	char* pWordTwo = (strchr(pNewItemID, ' ') + 1);
+	char pLetterTwo = pWordTwo[0];
 
 	HEADER_C* pC = GetHeaderPos(pList, pWordOne);
 
-	if (pC != NULL)
+	if (pC != NULL) // first letter
 	{
-		void** ppItems = pC->ppItems; //Dummy
+		ITEM3* pCitem = NULL;
+		void** pCitemArr = pC->ppItems;
 		int i = (int)*pWordTwo - 'A';
 
-		//if (*(ppItems + i) != nullptr && *pWordTwo == abc[i])
-		if (*(ppItems + i) != NULL && *pWordTwo == abc[i])
+		void** ppItems = (void**)malloc(26);
+
+		for (int letter = 0; letter < 26; letter++)
 		{
-			ITEM3* pItems = (ITEM3*)*(ppItems + i); //Dummy
-			char* pItemWordOne = GetWordOne(pItems->pID);
-
-			char* pItemWordTwo = (strchr(pItems->pID, ' ') + 1);
-			//if (pItemWordOne != nullptr)
-			if (pItemWordOne != NULL)
+			if (*(pCitemArr + letter)) // 2nd letter exists
 			{
-				//Iterate through Items
-				for (int j = 0; pItems; pItems = pItems->pNext, j++) //Compare input strings with item strings. Check for duplicate
-				{
-					pItemWordTwo = (strchr(pItems->pID, ' ') + 1);
-					if (StringCompare(pWordOne, pItemWordOne) && StringCompare(pWordTwo, pItemWordTwo))
-					{
-						//cout << "ERROR! This ID already exists";
-						printf("ERROR! This ID already exists\n");
-						return pList;
-					}
-				}
+				ITEM3* pCitem = (ITEM3*)(*(pCitemArr + letter));
+				// Find second word first letter
+				int spacePos = std::string(pCitem->pID).find(' ');
+				int secondItemPos = spacePos + 1;
 
-				// INSERTING NEW ITEM //
+				if (pCitem->pID[secondItemPos] == pLetterTwo) { // 2nd letter true
 
-				HEADER_C* newC = (HEADER_C*)malloc(sizeof(HEADER_C));
-
-				void** ppItems = (void**)malloc(26);
-
-				ITEM3* pLastItem = GetItemLastPos(pItems);
-				if (pNewItemID == 0)
-				{
-					pNewItem = (ITEM3*)GetItem(3, NULL);
-				}
-				else
-				{
 					pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+					pNewItem->pNext = pCitem;
+
+					pC->ppItems[letter] = pNewItem;
+					//printf(pCitem->pID, "\n");
+					return pList;
 				}
-				pNewItem->pNext = NULL;
-				pLastItem->pNext = pNewItem;
-				return pList;
 			}
 		}
 
-
-		if (abc[i] == *pWordTwo)
-		{
-			if (pNewItemID == 0)
-			{
-				pNewItem = (ITEM3*)GetItem(3, NULL);
-			}
-			else
-			{
-				pNewItem = (ITEM3*)GetItem(3, pNewItemID);
-			}
-			pNewItem->pNext = NULL;
-			*(ppItems + i) = (void*)pNewItem;
-			return pList;
-		}
-
+		// 2nd letter does not exist
+		pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+		pC->ppItems[i] = pNewItem;
+		
+		return pList;
+	
 	}
 	else
 	{
-		pC = pList; //DUMMY. pC has a pointer to the last header
-		while (pC->pNext != NULL)
+		pC = pList;
+		// New item should be inserted in the beginning
+		if (pNewItemID[0] < pC->cBegin)
 		{
-			pC = pC->pNext;
-		}
+			HEADER_C* newC = (HEADER_C*)malloc(sizeof(HEADER_C));
+			newC->ppItems = (void**)malloc(100);
+			//void** ppItems = (void**)malloc(100);
 
-		HEADER_C* newC = (HEADER_C*)malloc(sizeof(HEADER_C));
+			newC->cBegin = pNewItemID[0];
+			newC->pNext = pC;
 
-		void** ppItems = (void**)malloc(1000); // I am too wasted to properly fix this.
+			ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
 
-		for (int i = 0; i < 26; i++)
-		{
-			if (abc[i] == *pWordTwo)
+			int i = (int)*pWordTwo - 'A';
+
+			for (int i = 0; i < 26; i++)
 			{
-				ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
-				pNewItem->pNext = NULL;
-				*(ppItems + i) = (void*)pNewItem;
-				continue;
+				if (abc[i] == *pWordTwo)
+				{
+					ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+					pNewItem->pNext = NULL;
+					*(newC->ppItems + i) = (void*)pNewItem;
+					continue;
+				}
+				*(newC->ppItems + i) = NULL;
 			}
-			*(ppItems + i) = NULL;
-		}
 
-		newC->cBegin = *pWordOne;
-		newC->pNext = NULL;
-		newC->ppItems = ppItems;
-		pC->pNext = newC;
-		return pList;
+			newC->ppItems[i] = pNewItem;
+
+			//pList = newC;
+
+			return newC;
+		}
+		else
+		{
+			// Find position after which new item will be inserted
+			while (pC->pNext && pC->pNext->cBegin < pNewItemID[0])
+			{
+				pC = pC->pNext;
+			}
+			// New item should be inserted in the end
+			if (!pC->pNext)
+			{
+				HEADER_C* newC = (HEADER_C*)malloc(sizeof(HEADER_C));
+				newC->ppItems = (void**)malloc(100);
+				//void** ppItems = (void**)malloc(100);
+
+				newC->cBegin = pNewItemID[0];
+				newC->pNext = NULL;
+			
+				ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+
+				int i = (int)*pWordTwo - 'A';
+
+				for (int i = 0; i < 26; i++)
+				{
+					if (abc[i] == *pWordTwo)
+					{
+						ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+						pNewItem->pNext = NULL;
+						*(newC->ppItems + i) = (void*)pNewItem;
+						continue;
+					}
+					*(newC->ppItems + i) = NULL;
+				}
+
+				newC->ppItems[i] = pNewItem;
+
+				pC->pNext = newC;
+			}
+			// New item should be inserted in the middle
+			else
+			{
+				HEADER_C* newC = (HEADER_C*)malloc(sizeof(HEADER_C));
+				newC->ppItems = (void**)malloc(100);
+				//void** ppItems = (void**)malloc(100);
+
+				newC->cBegin = pNewItemID[0];
+				newC->pNext = pC->pNext;
+
+				ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+
+				int i = (int)*pWordTwo - 'A';
+
+				for (int i = 0; i < 26; i++)
+				{
+					if (abc[i] == *pWordTwo)
+					{
+						ITEM3* pNewItem = (ITEM3*)GetItem(3, pNewItemID);
+						pNewItem->pNext = NULL;
+						*(newC->ppItems + i) = (void*)pNewItem;
+						continue;
+					}
+					*(newC->ppItems + i) = NULL;
+				}
+
+				newC->ppItems[i] = pNewItem;
+
+				pC->pNext = newC;
+
+				//pCreatedHeader->pNext = pC->pNext;
+				//pC->pNext = pCreatedHeader;
+			}
+		}
 	}
 	return pList;
 }
 
 HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 {
-	if (CheckForValidity(pItemID) == false)
+	if (validateIDFormat(pItemID) == false)
 	{
 		//cout << "ERROR! Given index is wrong" << endl;
 		printf("ERROR! Given index is wrong\n");
 		return pList;
 	}
+
 	char* pWordOne = GetWordOne(pItemID);
 	char* pWordTwo = (strchr(pItemID, ' ') + 1);
 	char abc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -328,17 +439,17 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 						char* pItemWordOne = GetWordOne(pItem->pID);
 						char* pItemWordTwo = (strchr(pItem->pID, ' ') + 1);
 
-						if (StringCompare(pItemWordOne, pWordOne) && StringCompare(pItemWordTwo, pWordTwo))
+						if (strcmp(pItem->pID, pItemID) == 0)
 						{
 							ITEM3* pPrevItem = GetItemPreviousPos(pItem, (ITEM3*)*(pC->ppItems + i));
 							ITEM3* pNextItem = NULL;
 							if (pItem->pNext != NULL)
 							{
-								ITEM3* pNextItem = pItem->pNext;
+								pNextItem = pItem->pNext;
 							}
 							else
 							{
-								ITEM3* pNextItem = NULL;
+								pNextItem = NULL;
 							}
 
 							if (pPrevItem == NULL)
@@ -377,8 +488,9 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 int coursework1()
 {
 	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "MBa", "M Ba", "M Bb", "M Z" };
-
-	HEADER_C* data = GetStruct2(3, 33);
+	//const char* Cases[] = { "A A", "A K" };
+	//const char* Cases[] = { "M Ga", "M Gb", "M Z" };
+	HEADER_C* data = GetStruct2(3, 30);
 
 	printf("======INITIAL DATA START======\n");
 	PrintDataStructure(data);
@@ -409,11 +521,9 @@ int coursework1()
 
 	return 0;
 }
-
 /*
 int main() {
 	coursework1();
 
 	return 0;
-}
-*/
+}*/

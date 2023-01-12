@@ -12,6 +12,8 @@
 #include "ICS0017DataSource.h"
 #include "ItemsHandler.h"
 #include <vector>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -184,7 +186,6 @@ ITEM3* ItemsHandler::getItemFromList(ITEM3* list, char* itemID) {
 char* ItemsHandler::serializeItem(ITEM3* item, size_t* size) {
     int n = strlen(item->pID) + 1;
     char* serialItem, * r;
-    //*size = n + sizeof(ITEM2) + 3 * sizeof(int) + sizeof(unsigned long int) - sizeof(ITEM2*) - sizeof(TIME*) - sizeof(char*);
     *size = n + sizeof(ITEM3) + 3 * sizeof(int) + sizeof(unsigned long int) - sizeof(ITEM3*) - sizeof(TIME) - sizeof(char*);
     serialItem = (char*)malloc(*size);
     memcpy(r = serialItem, &n, sizeof(int));
@@ -228,13 +229,56 @@ int endline(int caseNo) {
 void DataStructure::printDataStructure() {
     HEADER_C* cache = this->Start;
     size_t currentQueue = 1;
+    int i = 0;
+    
+    if (i == 1) {
+        string temp;
+        vector <string> vec;
 
-    for (; cache; cache = cache->pNext) {
-        if (cache == nullptr) { continue; } // if there are null pointers in double linked list at first layer
-        else {
-            ITEM3** secondLayer = (ITEM3**)cache->ppItems;
-            for (int counter = 0; counter < 26; counter++) {
-                if (secondLayer[counter]) { ItemsHandler::printItemList((ITEM3*)(secondLayer[counter]), &currentQueue); }
+        for (; cache; cache = cache->pNext) {
+            if (cache == nullptr) { continue; } // if there are null pointers in double linked list at first layer
+            else {
+                ITEM3** secondLayer = (ITEM3**)cache->ppItems;
+                for (int counter = 0; counter < 26; counter++) {
+                    if (secondLayer[counter]) { 
+                        ITEM3* head = (ITEM3*)(secondLayer[counter]);
+                        for (; head; head = head->pNext) {
+                            ITEM3* item = head;
+                            size_t* currentNumber = &currentQueue;
+                            
+                            if (!item) { cout << "Nothing to print!" << endl; }
+                            
+                            std::stringstream buffer;
+                            buffer << item->pID << setfill(' ') << setw(5) << " | " <<
+                                "CODE:" << setfill(' ') << setw(11) << item->Code << " | " <<
+                                "TIME: " << setfill('0') << setw(2) << item->Time.Hour << ":" <<
+                                setw(2) << item->Time.Min << ":" <<
+                                setw(2) << item->Time.Sec;
+
+                            //cout << test << endl;
+                            vec.push_back(buffer.str());
+
+                        }
+                    }
+                }
+            }
+        }
+
+        sort(begin(vec), end(vec));
+
+        for (int i = 0; i < vec.size(); ++i)
+        {
+            cout << "No." << setfill(' ') << setw(3) << i+1 << " | " << vec[i] << '\n';
+        }
+    }
+    else {
+        for (; cache; cache = cache->pNext) {
+            if (cache == nullptr) { continue; } // if there are null pointers in double linked list at first layer
+            else {
+                ITEM3** secondLayer = (ITEM3**)cache->ppItems;
+                for (int counter = 0; counter < 26; counter++) {
+                    if (secondLayer[counter]) { ItemsHandler::printItemList((ITEM3*)(secondLayer[counter]), &currentQueue); }
+                }
             }
         }
     }
@@ -256,7 +300,7 @@ void DataStructure::getItem(DataStructure& right, char* s) {
 DataStructure::DataStructure(HEADER_C* generatedStructure, size_t size) :
     Start(generatedStructure), size(size) {}
 
-// Task 4, 9
+// Task 4
 DataStructure* DataStructure::copyElements(DataStructure& original) {
     std::vector <ITEM3> itemsToBeAppended = original.getAllItems();
     DataStructure* newDataStruct = new DataStructure(GetStruct2(3, 1), 1);
@@ -290,9 +334,12 @@ void DataStructure::insertItem(char* pNewItemID)
 
     if (pNewItemID == 0 || ItemsHandler::validateIDFormat(pNewItemID)) {
         ITEM3* newItem = (ITEM3*)GetItem(3, ((char*)pNewItemID));
+
+        // original
         newItem->pNext = (ITEM3*)this->Start->ppItems[0];
         this->Start->ppItems[0] = newItem;
         this->size++;
+        
     }
     else {
         throw exception("Format Error (Invalid ID Format or Nullptr)");
@@ -543,6 +590,86 @@ void DataStructure::write(char* filename) {
     fclose(pFile);
 }
 
+/*
+void DataStructure::write(char* pFilename) {
+    using namespace std;
+    //ofstream file(pFilename, ios::out);
+    //ofstream file ("datastruct.binary", ios::out | ios::binary);
+    fstream file;
+    file.open(pFilename, fstream::out);
+
+    if (file.good() == 0) {
+        printf("\nNot good! - gcount: %d\n", file.gcount());
+        throw;
+    }
+
+    if (!file) {
+        cout << endl << "Cannot open file!" << endl;
+        throw;
+    }
+
+    HEADER_C* pointer = this->Start;
+    HEADER_C* thisHead = this->Start;
+    int written = 0;
+    char newl = '\n';
+    char period = '.';
+    char end = '\0';
+
+    while (pointer) {
+        for (int i = 0; i < 26; i++) {
+            if ((pointer->ppItems)[i] != 0) {
+                ITEM3* thisItem = (ITEM3*)((pointer->ppItems)[i]);
+
+                do {
+
+                    file.write(thisItem->pID, strlen(thisItem->pID));
+                    file << period;
+
+                    string codestr1 = to_string(thisItem->Code);
+                    char const* codestr = codestr1.c_str();
+                    file.write(codestr, strlen(codestr));
+                    file << period;
+
+                    string hour1 = to_string(thisItem->Time.Hour);
+                    char const* hour = hour1.c_str();
+                    file.write(hour, strlen(hour));
+                    file << period;
+
+                    string minute1 = to_string(thisItem->Time.Min);
+                    char const* minute = minute1.c_str();
+                    file.write(minute, strlen(minute));
+                    file << period;
+
+                    string seconds1 = to_string(thisItem->Time.Sec);
+                    char const* seconds = seconds1.c_str();
+                    file.write(seconds, strlen(seconds));
+                    file << newl;
+
+
+                    if (file.good() == 0) {
+                        printf("\nNot good! - gcount: %d\n", file.gcount());
+                        throw;
+                    }
+
+                    written++;
+                    thisItem = thisItem->pNext;
+                } while (thisItem != 0);
+            }
+        }
+
+        if (pointer->pNext) {
+            pointer = pointer->pNext;
+            thisHead = pointer->pNext;
+        }
+        else {
+            printf("\nall items were succesfully written in the file: n = %d \n", written);
+            return;
+        }
+    }
+
+    file.close();
+}  // end of write method
+*/
 
 void coursework1() {
     // TEST CASES START //
@@ -564,6 +691,8 @@ void coursework1() {
     // TEST CASE 2 START //
     // One after another inserts new items with identifiers: Z A, Z Z, Z K, A Z, A A, A K, G Z, G A, G K, M A, M Ba, M Bb, M Z.
     char insert[][13] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "M Ba", "M Bb", "M Z" };
+
+    //char insert[][4] = { "Z A" };
 
     int len = sizeof(insert) / sizeof(insert[0]); // detect the length of insert array
 
@@ -628,6 +757,7 @@ void coursework1() {
             cerr << msg.what() << endl;
         }
     } // remoiving items, we previously added
+    cout << "Items succesfully removed" << endl;
 
     // TEST CASE 5 STOP //
 
@@ -648,7 +778,7 @@ void coursework1() {
     catch (const exception& msg) {
         cerr << msg.what() << endl;
     }
-
+    
     // TEST CASE 6 STOP //
 
     testcase = endline(testcase);
@@ -694,7 +824,7 @@ int coursework2()
     int noOfElements = 10;
     for (int i = 0; i < noOfElements; i++) {
         ITEM3* toBeAdded = (ITEM3*)GetItem(3);
-        //ItemsHandler::printItem(toBeAdded);
+        ItemsHandler::printItem(toBeAdded);
         *structure += toBeAdded;
     }
     if (noOfElements == structure->getItemsNumber()) {
@@ -745,9 +875,12 @@ int coursework2()
     // Using the copy constructor creates the copy of current structure.
 
     cout << "New struct: " << endl;
-    DataStructure anotherStructure;
-    anotherStructure = *structure;
-    anotherStructure.printDataStructure();
+    //DataStructure anotherStructure;
+    //anotherStructure = *structure;
+    //anotherStructure.printDataStructure();
+
+    DataStructure* copyOfDataStructure = new DataStructure(*structure);
+    copyOfDataStructure->printDataStructure();
 
     // TEST CASE 7 STOP //
 
@@ -769,7 +902,8 @@ int coursework2()
     // TEST CASE 9 START //
     // Compares the initial structure (now with 7 items) with the copy structure.
 
-    switch (*structure == anotherStructure) {
+    //switch (*structure == anotherStructure) {
+    switch (*structure == *copyOfDataStructure) {
     case(false):
         cout << ("Structures are not identical") << endl;
         break;
@@ -822,8 +956,11 @@ int coursework2()
     // Asssigns to the structure just created (7 items) the copy created in step 7 (10 items) and prints
     // the result.
 
-    anotherStructure = *fromFile; // or from *structure?
-    anotherStructure.printDataStructure();
+    //anotherStructure = *fromFile; // or from *structure?
+    //*fromFile = anotherStructure;
+    *fromFile = *copyOfDataStructure;
+    //anotherStructure.printDataStructure();
+    fromFile->printDataStructure();
 
     // TEST CASE 12 STOP //
 
@@ -834,7 +971,7 @@ int coursework2()
     // DESTRUCTOR CHECK
     // cout << "destructor check" << endl << endl;
     structure->~DataStructure();
-    anotherStructure.~DataStructure();
+    //anotherStructure.~DataStructure();
     fromFile->~DataStructure();
 
     // VERIFY THAT STRUCTURES ARE DESTROYED
@@ -859,7 +996,7 @@ int coursework2()
 
 int main() {
     //coursework1();
-    //coursework2();
+    coursework2();
 
     return 0;
 }
