@@ -727,7 +727,7 @@ int coursework2()
     // Writes the initial structure (now 7 items) into a data file.
 
     structure->printDataStructure();
-    // The folder should be created.
+    // The folder should be manually created.
     // File could be created or will be rewritten otherwise.
     structure->write((char*)"C:\\CPP-Coursework\\dataset.dat");
 
@@ -799,9 +799,9 @@ int coursework2()
 
     return 0;
 }
-
+/*
 int main() {
     coursework2();
 
     return 0;
-}
+}*/
