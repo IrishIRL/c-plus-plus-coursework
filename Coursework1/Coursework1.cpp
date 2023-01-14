@@ -251,8 +251,9 @@ HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 		}
 	}
 	if (pNewItemID && isInStructure(pNewItemID, pList)) {
-		printf("Already exists in structure.");
-		throw 1;
+		printf("Already exists in structure.\n");
+		//throw 1;
+		return pList;
 		// throw 1; // Already exists exception
 	}
 
@@ -307,7 +308,6 @@ HEADER_C* InsertItem(HEADER_C* pList, char* pNewItemID = 0)
 		{
 			HEADER_C* newC = (HEADER_C*)malloc(sizeof(HEADER_C));
 			newC->ppItems = (void**)malloc(100);
-			//void** ppItems = (void**)malloc(100);
 
 			newC->cBegin = pNewItemID[0];
 			newC->pNext = pC;
@@ -487,15 +487,15 @@ HEADER_C* RemoveItem(HEADER_C* pList, char* pItemID)
 
 int coursework1()
 {
-	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "MBa", "M Ba", "M Bb", "M Z" };
-	//const char* Cases[] = { "A A", "A K" };
-	//const char* Cases[] = { "M Ga", "M Gb", "M Z" };
+	const char* Cases[] = { "Z A", "Z Z", "Z K", "A Z", "A A", "A K", "G Z", "G A", "G K", "M A", "M Ba", "M Bb", "M Z"};
+	const char* Cases1[] = { "M Ba", "MBa" };
 	HEADER_C* data = GetStruct2(3, 30);
 
 	printf("======INITIAL DATA START======\n");
 	PrintDataStructure(data);
 	printf("======INITIAL DATA STOP=======\n");
 
+	printf("Inserting correct items...\n");
 	int len = sizeof(Cases) / sizeof(Cases[0]);
 	//for (int i = 0; i < 14; i++)
 	for (int i = 0; i < len; i++)
@@ -504,15 +504,32 @@ int coursework1()
 		strcpy(newChars, Cases[i]);
 		data = InsertItem(data, newChars);
 	}
-
+	printf("Done.\n");
+	printf("Try to insert wrong items:\n");
+	int lenWrong = sizeof(Cases1) / sizeof(Cases1[0]);
+	for (int i = 0; i < lenWrong; i++)
+	{
+		char* newChars = (char*)malloc(strlen(Cases1[i]) * sizeof(char));
+		strcpy(newChars, Cases1[i]);
+		data = InsertItem(data, newChars);
+	}
 	printf("======NEW DATA START======\n");
 	PrintDataStructure(data);
 	printf("======NEW DATA STOP=======\n");
 
+	printf("Deleting items...\n");
 	for (int i = 0; i < len; i++)
 	{
 		char* newChars = (char*)malloc(strlen(Cases[i]) * sizeof(char));
 		strcpy(newChars, Cases[i]);
+		data = RemoveItem(data, newChars);
+	}
+	printf("Done.\n");
+	printf("Try to delete wrong items:\n");
+	for (int i = 0; i < lenWrong; i++)
+	{
+		char* newChars = (char*)malloc(strlen(Cases1[i]) * sizeof(char));
+		strcpy(newChars, Cases1[i]);
 		data = RemoveItem(data, newChars);
 	}
 	printf("======REM DATA START======\n");
